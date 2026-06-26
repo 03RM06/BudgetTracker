@@ -1,0 +1,12 @@
+target/
+*.class
+*.jar
+*.war
+
+.idea/
+*.iml
+nbproject/
+nb-configuration.xml
+
+*.log
+*.tmp
