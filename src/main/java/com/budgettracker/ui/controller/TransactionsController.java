@@ -15,7 +15,9 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
+import com.budgettracker.ui.ThemeManager;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.DatePicker;
@@ -188,10 +190,12 @@ public class TransactionsController {
     private void openTransactionDialog(Transaction existing) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/TransactionDialog.fxml"));
+            Parent root = loader.load();
+            ThemeManager.applyTheme(root);
             Stage dialog = new Stage();
             dialog.setTitle(existing == null ? "Add Transaction" : "Edit Transaction");
             dialog.initModality(Modality.APPLICATION_MODAL);
-            dialog.setScene(new Scene(loader.load(), 460, 500));
+            dialog.setScene(new Scene(root, 460, 500));
             TransactionDialogController controller = loader.getController();
             if (existing != null) {
                 controller.initForEdit(existing);

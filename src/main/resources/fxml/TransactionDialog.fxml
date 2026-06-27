@@ -3,10 +3,10 @@
 <?import javafx.scene.control.*?>
 <VBox xmlns:fx="http://javafx.com/fxml"
       fx:controller="com.budgettracker.ui.controller.TransactionDialogController"
-      spacing="10" style="-fx-padding: 24; -fx-background-color: #f5f5f5;">
+      spacing="10" styleClass="dialog-container">
 
     <Label fx:id="titleLabel" text="Add Transaction"
-           style="-fx-font-size: 16; -fx-font-weight: bold;"/>
+           styleClass="dialog-title"/>
 
     <Label text="Amount"/>
     <TextField fx:id="amountField" promptText="e.g. 500.00"/>
@@ -38,8 +38,8 @@
     <Label fx:id="errorLabel" styleClass="error-label" wrapText="true"/>
 
     <HBox spacing="8" alignment="CENTER_RIGHT">
-        <Button text="Cancel" onAction="#onCancel" style="-fx-padding: 8 20;"/>
+        <Button text="Cancel" onAction="#onCancel" styleClass="btn-secondary"/>
         <Button text="Save" onAction="#onSave"
-                style="-fx-background-color: #3498db; -fx-text-fill: white; -fx-padding: 8 20;"/>
+                styleClass="btn-primary"/>
     </HBox>
 </VBox>

@@ -10,7 +10,9 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
+import com.budgettracker.ui.ThemeManager;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
@@ -87,10 +89,12 @@ public class BudgetsController {
     private void onAddEnvelope() {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/BudgetDialog.fxml"));
+            Parent root = loader.load();
+            ThemeManager.applyTheme(root);
             Stage dialog = new Stage();
             dialog.setTitle("Add Budget Envelope");
             dialog.initModality(Modality.APPLICATION_MODAL);
-            dialog.setScene(new Scene(loader.load(), 400, 380));
+            dialog.setScene(new Scene(root, 400, 380));
             dialog.showAndWait();
             loadEnvelopes();
         } catch (Exception e) {

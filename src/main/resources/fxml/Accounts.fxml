@@ -3,13 +3,13 @@
 <?import javafx.scene.control.*?>
 <VBox xmlns:fx="http://javafx.com/fxml"
       fx:controller="com.budgettracker.ui.controller.AccountsController"
-      spacing="16" style="-fx-padding: 10;">
+      spacing="16" styleClass="view-root">
 
     <!-- Header row -->
     <HBox alignment="CENTER_LEFT" spacing="12">
         <Label text="Accounts" styleClass="section-header" HBox.hgrow="ALWAYS"/>
         <Button fx:id="addButton" text="+ Add Account" onAction="#onAddAccount"
-                style="-fx-background-color: #3498db; -fx-text-fill: white; -fx-padding: 8 16;"/>
+                styleClass="btn-primary"/>
     </HBox>
 
     <Label fx:id="statusLabel" styleClass="error-label"/>
@@ -27,6 +27,6 @@
 
     <HBox spacing="8">
         <Button text="Archive Selected" onAction="#onArchiveSelected"
-                style="-fx-background-color: #95a5a6; -fx-text-fill: white; -fx-padding: 6 14;"/>
+                styleClass="btn-muted"/>
     </HBox>
 </VBox>

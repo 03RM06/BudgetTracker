@@ -10,7 +10,9 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
+import com.budgettracker.ui.ThemeManager;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -76,10 +78,12 @@ public class RecurringController {
     private void onAddRule() {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/RecurringDialog.fxml"));
+            Parent root = loader.load();
+            ThemeManager.applyTheme(root);
             Stage dialog = new Stage();
             dialog.setTitle("Add Recurring Rule");
             dialog.initModality(Modality.APPLICATION_MODAL);
-            dialog.setScene(new Scene(loader.load(), 460, 540));
+            dialog.setScene(new Scene(root, 460, 540));
             dialog.showAndWait();
             loadRules();
         } catch (Exception e) {
@@ -91,10 +95,12 @@ public class RecurringController {
     private void onConfirmPending() {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/PendingConfirmDialog.fxml"));
+            Parent root = loader.load();
+            ThemeManager.applyTheme(root);
             Stage dialog = new Stage();
             dialog.setTitle("Confirm Pending Transactions");
             dialog.initModality(Modality.APPLICATION_MODAL);
-            dialog.setScene(new Scene(loader.load(), 500, 420));
+            dialog.setScene(new Scene(root, 500, 420));
             dialog.showAndWait();
             loadRules();
         } catch (Exception e) {

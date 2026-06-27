@@ -3,7 +3,7 @@
 <?import javafx.scene.control.*?>
 <VBox xmlns:fx="http://javafx.com/fxml"
       fx:controller="com.budgettracker.ui.controller.DashboardHomeController"
-      spacing="20" style="-fx-padding: 10;">
+      spacing="20" styleClass="view-root">
 
     <Label text="Overview" styleClass="section-header"/>
 

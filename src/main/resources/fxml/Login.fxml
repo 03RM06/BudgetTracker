@@ -4,14 +4,12 @@
 <VBox xmlns:fx="http://javafx.com/fxml"
       fx:controller="com.budgettracker.ui.controller.LoginController"
       alignment="CENTER" spacing="15"
-      style="-fx-padding: 60; -fx-background-color: #f5f5f5;">
+      styleClass="page-root">
 
-    <Label text="BudgetTracker"
-           style="-fx-font-size: 28; -fx-font-weight: bold; -fx-text-fill: #2c3e50;"/>
+    <Label text="BudgetTracker" styleClass="page-title"/>
 
     <VBox styleClass="card" spacing="12" maxWidth="360">
-        <Label fx:id="modeLabel" text="Sign In"
-               style="-fx-font-size: 18; -fx-font-weight: bold;"/>
+        <Label fx:id="modeLabel" text="Sign In" styleClass="dialog-title"/>
 
         <TextField fx:id="emailField" promptText="Email"/>
         <TextField fx:id="displayNameField" promptText="Display Name" managed="false" visible="false"/>
@@ -23,7 +21,7 @@
 
         <Button fx:id="primaryButton" text="Sign In" onAction="#onPrimary"
                 maxWidth="Infinity"
-                style="-fx-background-color: #3498db; -fx-text-fill: white; -fx-font-size: 14; -fx-padding: 10;"/>
+                styleClass="btn-primary"/>
 
         <Hyperlink fx:id="toggleLink" text="Don't have an account? Register"
                    onAction="#onToggleMode"/>

@@ -7,7 +7,9 @@ import java.util.List;
 import javafx.collections.FXCollections;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
+import com.budgettracker.ui.ThemeManager;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -62,10 +64,12 @@ public class AccountsController {
     private void onAddAccount() {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/AccountDialog.fxml"));
+            Parent root = loader.load();
+            ThemeManager.applyTheme(root);
             Stage dialog = new Stage();
             dialog.setTitle("Add Account");
             dialog.initModality(Modality.APPLICATION_MODAL);
-            dialog.setScene(new Scene(loader.load(), 400, 340));
+            dialog.setScene(new Scene(root, 400, 340));
             dialog.showAndWait();
             loadAccounts(); // refresh after dialog closes
         } catch (Exception e) {

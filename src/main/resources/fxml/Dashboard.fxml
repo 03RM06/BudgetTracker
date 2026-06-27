@@ -6,19 +6,19 @@
             stylesheets="@../css/app.css">
     <left>
         <VBox styleClass="nav-sidebar" spacing="4" minWidth="200">
-            <Label text="BudgetTracker"
-                   style="-fx-text-fill: white; -fx-font-size: 16; -fx-font-weight: bold; -fx-padding: 0 0 20 0;"/>
+            <Label text="BudgetTracker" styleClass="nav-brand"/>
             <Button text="Home"         onAction="#showHome"         styleClass="nav-button" fx:id="btnHome"/>
             <Button text="Accounts"     onAction="#showAccounts"     styleClass="nav-button" fx:id="btnAccounts"/>
             <Button text="Transactions" onAction="#showTransactions"  styleClass="nav-button" fx:id="btnTransactions"/>
             <Button text="Budgets"      onAction="#showBudgets"      styleClass="nav-button" fx:id="btnBudgets"/>
             <Button text="Recurring"    onAction="#showRecurring"    styleClass="nav-button" fx:id="btnRecurring"/>
             <Region VBox.vgrow="ALWAYS"/>
-            <Label fx:id="userLabel" style="-fx-text-fill: #bdc3c7; -fx-font-size: 11;"/>
+            <Button fx:id="themeToggleBtn" text="☀ Light Mode" onAction="#onToggleTheme" styleClass="theme-toggle-btn"/>
+            <Label fx:id="userLabel" styleClass="nav-user"/>
             <Button text="Logout" onAction="#onLogout" styleClass="nav-button"/>
         </VBox>
     </left>
     <center>
-        <StackPane fx:id="contentArea" style="-fx-padding: 20;"/>
+        <StackPane fx:id="contentArea" styleClass="content-area"/>
     </center>
 </BorderPane>

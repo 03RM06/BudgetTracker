@@ -3,17 +3,17 @@
 <?import javafx.scene.control.*?>
 <VBox xmlns:fx="http://javafx.com/fxml"
       fx:controller="com.budgettracker.ui.controller.RecurringController"
-      spacing="16" style="-fx-padding: 10;">
+      spacing="16" styleClass="view-root">
 
     <HBox alignment="CENTER_LEFT" spacing="12">
         <Label text="Recurring Rules" styleClass="section-header" HBox.hgrow="ALWAYS"/>
         <Button fx:id="confirmPendingBtn" text="Confirm Pending" onAction="#onConfirmPending"
                 managed="false" visible="false"
-                style="-fx-background-color: #e67e22; -fx-text-fill: white; -fx-padding: 8 16;"/>
+                styleClass="btn-warning"/>
         <Button text="Enable/Disable" onAction="#onToggleActive"
-                style="-fx-padding: 8 16;"/>
+                styleClass="btn-secondary"/>
         <Button text="+ Add Rule" onAction="#onAddRule"
-                style="-fx-background-color: #3498db; -fx-text-fill: white; -fx-padding: 8 16;"/>
+                styleClass="btn-primary"/>
     </HBox>
 
     <Label fx:id="statusLabel" styleClass="error-label"/>

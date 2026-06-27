@@ -2,6 +2,7 @@ package com.budgettracker.ui.controller;
 
 import com.budgettracker.ui.AppContext;
 import com.budgettracker.ui.Session;
+import com.budgettracker.ui.ThemeManager;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -15,6 +16,7 @@ public class DashboardController {
 
     @FXML private StackPane contentArea;
     @FXML private Label userLabel;
+    @FXML private Button themeToggleBtn;
     @FXML private Button btnHome;
     @FXML private Button btnAccounts;
     @FXML private Button btnTransactions;
@@ -54,6 +56,12 @@ public class DashboardController {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    @FXML
+    private void onToggleTheme() {
+        ThemeManager.toggle(themeToggleBtn.getScene().getRoot());
+        themeToggleBtn.setText(ThemeManager.isDark() ? "☾ Dark Mode" : "☀ Light Mode");
     }
 
     private void loadCenter(String fxmlPath, Button activeBtn) {

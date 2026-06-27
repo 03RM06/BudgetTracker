@@ -3,9 +3,9 @@
 <?import javafx.scene.control.*?>
 <VBox xmlns:fx="http://javafx.com/fxml"
       fx:controller="com.budgettracker.ui.controller.AccountDialogController"
-      spacing="12" style="-fx-padding: 24; -fx-background-color: #f5f5f5;">
+      spacing="12" styleClass="dialog-container">
 
-    <Label text="New Account" style="-fx-font-size: 16; -fx-font-weight: bold;"/>
+    <Label text="New Account" styleClass="dialog-title"/>
 
     <Label text="Name"/>
     <TextField fx:id="nameField" promptText="e.g. BDO Savings"/>
@@ -23,8 +23,8 @@
 
     <HBox spacing="8" alignment="CENTER_RIGHT">
         <Button text="Cancel" onAction="#onCancel"
-                style="-fx-padding: 8 20;"/>
+                styleClass="btn-secondary"/>
         <Button text="Create" onAction="#onCreate"
-                style="-fx-background-color: #3498db; -fx-text-fill: white; -fx-padding: 8 20;"/>
+                styleClass="btn-primary"/>
     </HBox>
 </VBox>

@@ -3,13 +3,13 @@
 <?import javafx.scene.control.*?>
 <VBox xmlns:fx="http://javafx.com/fxml"
       fx:controller="com.budgettracker.ui.controller.TransactionsController"
-      spacing="14" style="-fx-padding: 10;">
+      spacing="14" styleClass="view-root">
 
     <!-- Header row -->
     <HBox alignment="CENTER_LEFT" spacing="12">
         <Label text="Transactions" styleClass="section-header" HBox.hgrow="ALWAYS"/>
         <Button text="+ Add Transaction" onAction="#onAddTransaction"
-                style="-fx-background-color: #3498db; -fx-text-fill: white; -fx-padding: 8 16;"/>
+                styleClass="btn-primary"/>
     </HBox>
 
     <!-- Filter row -->
@@ -20,9 +20,9 @@
         <DatePicker fx:id="toDate" promptText="To date"/>
         <ChoiceBox fx:id="directionFilter" prefWidth="120"/>
         <Button text="Filter" onAction="#onFilter"
-                style="-fx-padding: 6 14;"/>
+                styleClass="btn-secondary"/>
         <Button text="Clear" onAction="#onClearFilter"
-                style="-fx-padding: 6 14;"/>
+                styleClass="btn-secondary"/>
     </HBox>
 
     <Label fx:id="statusLabel" styleClass="error-label"/>
@@ -41,8 +41,8 @@
 
     <HBox spacing="8">
         <Button text="Edit Selected"   onAction="#onEditSelected"
-                style="-fx-padding: 6 14;"/>
+                styleClass="btn-secondary"/>
         <Button text="Delete Selected" onAction="#onDeleteSelected"
-                style="-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-padding: 6 14;"/>
+                styleClass="btn-danger"/>
     </HBox>
 </VBox>
