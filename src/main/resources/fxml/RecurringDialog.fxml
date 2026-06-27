@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<VBox xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.budgettracker.ui.controller.RecurringDialogController"
+      spacing="10" style="-fx-padding: 24; -fx-background-color: #f5f5f5;">
+
+    <Label text="New Recurring Rule" style="-fx-font-size: 16; -fx-font-weight: bold;"/>
+
+    <Label text="Description"/>
+    <TextField fx:id="descriptionField" promptText="e.g. Monthly rent"/>
+
+    <Label text="Amount (template)"/>
+    <TextField fx:id="amountField" promptText="e.g. 15000.00"/>
+
+    <Label text="Direction"/>
+    <ChoiceBox fx:id="directionChoice" prefWidth="180" onAction="#onDirectionChanged"/>
+
+    <Label text="Account"/>
+    <ChoiceBox fx:id="accountChoice" prefWidth="240"/>
+
+    <Label fx:id="categoryLabel" text="Category (expense)" managed="false" visible="false"/>
+    <ChoiceBox fx:id="categoryChoice" prefWidth="240" managed="false" visible="false"/>
+
+    <Label fx:id="incomeNatureLabel" text="Income Nature" managed="false" visible="false"/>
+    <ChoiceBox fx:id="incomeNatureChoice" prefWidth="180" managed="false" visible="false"/>
+
+    <Label text="Frequency"/>
+    <ChoiceBox fx:id="frequencyChoice" prefWidth="180"/>
+
+    <Label text="Start Date (anchor)"/>
+    <DatePicker fx:id="startDatePicker"/>
+
+    <Label text="Zone ID (leave blank for system default)"/>
+    <TextField fx:id="zoneField" promptText="e.g. Asia/Manila"/>
+
+    <CheckBox fx:id="variableAmountCheck" text="Variable amount (confirm each occurrence)"/>
+
+    <Label fx:id="errorLabel" styleClass="error-label" wrapText="true"/>
+
+    <HBox spacing="8" alignment="CENTER_RIGHT">
+        <Button text="Cancel" onAction="#onCancel" style="-fx-padding: 8 20;"/>
+        <Button text="Create" onAction="#onCreate"
+                style="-fx-background-color: #3498db; -fx-text-fill: white; -fx-padding: 8 20;"/>
+    </HBox>
+</VBox>

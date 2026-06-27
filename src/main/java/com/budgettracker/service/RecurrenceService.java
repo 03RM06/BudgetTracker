@@ -4,37 +4,47 @@ import com.budgettracker.domain.BudgetTrackerException;
 import com.budgettracker.domain.Frequency;
 import com.budgettracker.domain.RecurringTransaction;
 import com.budgettracker.domain.Transaction;
+import com.budgettracker.persistence.DataAccessException;
 import com.budgettracker.persistence.RecurringTransactionRepository;
 import com.budgettracker.persistence.TransactionRepository;
-import java.sql.SQLException;
+import com.budgettracker.persistence.TxRunner;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.YearMonth;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class RecurrenceService {
 
+    private static final Logger log = LoggerFactory.getLogger(RecurrenceService.class);
+
+    private final TxRunner txRunner;
     private final RecurringTransactionRepository recurringRepo;
     private final TransactionRepository txRepo;
     private final TransactionService txService;
 
-    public RecurrenceService(RecurringTransactionRepository recurringRepo,
+    public RecurrenceService(TxRunner txRunner,
+                             RecurringTransactionRepository recurringRepo,
                              TransactionRepository txRepo,
                              TransactionService txService) {
+        this.txRunner = txRunner;
         this.recurringRepo = recurringRepo;
         this.txRepo = txRepo;
         this.txService = txService;
     }
 
     public void materializeDue(long userId) {
-        LocalDate today = LocalDate.now();
+        LocalDate queryDate = LocalDate.now();
         try {
-            List<RecurringTransaction> dueRules = recurringRepo.findDueByDate(today);
+            List<RecurringTransaction> dueRules = recurringRepo.findDueByDate(queryDate);
             for (RecurringTransaction rule : dueRules) {
                 if (rule.getUserId() != userId) {
                     continue;
                 }
+                LocalDate today = LocalDate.now(ZoneId.of(rule.getZoneId()));
                 // Only count rows on the rule's own account to avoid paired-transfer double counting.
                 List<Transaction> existingTxns = txRepo.findByRecurringId(rule.getId())
                         .stream()
@@ -67,7 +77,8 @@ public class RecurrenceService {
                     cursor = next;
                 }
             }
-        } catch (SQLException e) {
+        } catch (DataAccessException e) {
+            log.error("Failed to materialize recurring transactions for userId={}", userId, e);
             throw new BudgetTrackerException("Failed to materialize recurring transactions", e);
         }
     }

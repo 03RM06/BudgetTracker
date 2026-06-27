@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<VBox xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.budgettracker.ui.controller.DashboardHomeController"
+      spacing="20" style="-fx-padding: 10;">
+
+    <Label text="Overview" styleClass="section-header"/>
+
+    <!-- Summary cards row -->
+    <HBox fx:id="cardsBox" spacing="16">
+        <VBox styleClass="summary-card" spacing="4">
+            <Label text="Accounts" styleClass="summary-label"/>
+            <Label fx:id="accountCountLabel" text="-" styleClass="summary-value"/>
+        </VBox>
+        <VBox styleClass="summary-card" spacing="4">
+            <Label text="Total Balance" styleClass="summary-label"/>
+            <Label fx:id="totalBalanceLabel" text="-" styleClass="summary-value"/>
+        </VBox>
+        <VBox styleClass="summary-card" spacing="4">
+            <Label text="Pending Transactions" styleClass="summary-label"/>
+            <Label fx:id="pendingCountLabel" text="-" styleClass="summary-value"/>
+        </VBox>
+    </HBox>
+
+    <!-- Budget alert area (M1) -->
+    <VBox spacing="6">
+        <Label text="Budget Alerts" styleClass="summary-label"/>
+        <Label fx:id="budgetAlertsLabel" wrapText="true" maxWidth="700"/>
+    </VBox>
+
+    <Label fx:id="statusLabel" styleClass="error-label"/>
+</VBox>

@@ -5,7 +5,6 @@ import com.budgettracker.domain.IncomeNature;
 import com.budgettracker.domain.RecurringTransaction;
 import com.budgettracker.domain.TxDirection;
 import com.budgettracker.util.Dates;
-import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -16,14 +15,17 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class JdbcRecurringTransactionRepository implements RecurringTransactionRepository {
 
+    private static final Logger log = LoggerFactory.getLogger(JdbcRecurringTransactionRepository.class);
+
     @Override
-    public RecurringTransaction save(RecurringTransaction rule) throws SQLException {
+    public RecurringTransaction save(RecurringTransaction rule) {
         String sql = "INSERT INTO recurring_transactions (user_id, account_id, category_id, direction, template_amount, variable_amount, income_nature, currency, frequency, interval_count, anchor_date, zone_id, day_of_month, next_run_date, end_date, max_occurrences, active, description, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        Connection conn = Database.getConnection();
-        try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        try (PreparedStatement ps = ConnectionContext.requireConnection().prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setLong(1, rule.getUserId());
             ps.setLong(2, rule.getAccountId());
             if (rule.getCategoryId() == null) {
@@ -78,59 +80,63 @@ public class JdbcRecurringTransactionRepository implements RecurringTransactionR
                     rule.setId(keys.getLong(1));
                 }
             }
+        } catch (SQLException e) {
+            throw new DataAccessException("save recurring transaction failed", e);
         }
         return rule;
     }
 
     @Override
-    public Optional<RecurringTransaction> findById(long id) throws SQLException {
+    public Optional<RecurringTransaction> findById(long id) {
         String sql = "SELECT * FROM recurring_transactions WHERE id = ?";
-        Connection conn = Database.getConnection();
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (PreparedStatement ps = ConnectionContext.requireConnection().prepareStatement(sql)) {
             ps.setLong(1, id);
             try (ResultSet rs = ps.executeQuery()) {
                 return rs.next() ? Optional.of(mapRow(rs)) : Optional.empty();
             }
+        } catch (SQLException e) {
+            throw new DataAccessException("findById recurring transaction failed", e);
         }
     }
 
     @Override
-    public List<RecurringTransaction> findByUserId(long userId) throws SQLException {
+    public List<RecurringTransaction> findByUserId(long userId) {
         String sql = "SELECT * FROM recurring_transactions WHERE user_id = ?";
-        Connection conn = Database.getConnection();
         List<RecurringTransaction> list = new ArrayList<>();
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (PreparedStatement ps = ConnectionContext.requireConnection().prepareStatement(sql)) {
             ps.setLong(1, userId);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     list.add(mapRow(rs));
                 }
             }
+        } catch (SQLException e) {
+            throw new DataAccessException("findByUserId recurring transactions failed", e);
         }
         return list;
     }
 
     @Override
-    public List<RecurringTransaction> findDueByDate(LocalDate date) throws SQLException {
+    public List<RecurringTransaction> findDueByDate(LocalDate date) {
         String sql = "SELECT * FROM recurring_transactions WHERE active = 1 AND (next_run_date IS NULL OR next_run_date <= ?) ORDER BY next_run_date ASC";
-        Connection conn = Database.getConnection();
         List<RecurringTransaction> list = new ArrayList<>();
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (PreparedStatement ps = ConnectionContext.requireConnection().prepareStatement(sql)) {
             ps.setDate(1, Dates.toSqlDate(date));
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     list.add(mapRow(rs));
                 }
             }
+        } catch (SQLException e) {
+            throw new DataAccessException("findDueByDate recurring transactions failed", e);
         }
         return list;
     }
 
     @Override
-    public void update(RecurringTransaction rule) throws SQLException {
+    public void update(RecurringTransaction rule) {
         String sql = "UPDATE recurring_transactions SET account_id = ?, category_id = ?, direction = ?, template_amount = ?, variable_amount = ?, income_nature = ?, currency = ?, frequency = ?, interval_count = ?, anchor_date = ?, zone_id = ?, day_of_month = ?, next_run_date = ?, end_date = ?, max_occurrences = ?, active = ?, description = ?, updated_at = ? WHERE id = ?";
-        Connection conn = Database.getConnection();
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (PreparedStatement ps = ConnectionContext.requireConnection().prepareStatement(sql)) {
             ps.setLong(1, rule.getAccountId());
             if (rule.getCategoryId() == null) {
                 ps.setNull(2, Types.BIGINT);
@@ -179,14 +185,15 @@ public class JdbcRecurringTransactionRepository implements RecurringTransactionR
             ps.setTimestamp(18, Dates.toTimestamp(rule.getUpdatedAt()));
             ps.setLong(19, rule.getId());
             ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new DataAccessException("update recurring transaction failed", e);
         }
     }
 
     @Override
-    public void updateNextRunDate(long id, LocalDate nextRunDate) throws SQLException {
+    public void updateNextRunDate(long id, LocalDate nextRunDate) {
         String sql = "UPDATE recurring_transactions SET next_run_date = ?, updated_at = ? WHERE id = ?";
-        Connection conn = Database.getConnection();
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (PreparedStatement ps = ConnectionContext.requireConnection().prepareStatement(sql)) {
             if (nextRunDate == null) {
                 ps.setNull(1, Types.DATE);
             } else {
@@ -195,16 +202,19 @@ public class JdbcRecurringTransactionRepository implements RecurringTransactionR
             ps.setTimestamp(2, Dates.toTimestamp(Instant.now()));
             ps.setLong(3, id);
             ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new DataAccessException("updateNextRunDate recurring transaction failed", e);
         }
     }
 
     @Override
-    public void deleteById(long id) throws SQLException {
+    public void deleteById(long id) {
         String sql = "DELETE FROM recurring_transactions WHERE id = ?";
-        Connection conn = Database.getConnection();
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (PreparedStatement ps = ConnectionContext.requireConnection().prepareStatement(sql)) {
             ps.setLong(1, id);
             ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new DataAccessException("deleteById recurring transaction failed", e);
         }
     }
 

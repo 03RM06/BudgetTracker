@@ -8,11 +8,11 @@ import com.budgettracker.domain.Transaction;
 import com.budgettracker.domain.TxDirection;
 import com.budgettracker.persistence.AccountRepository;
 import com.budgettracker.persistence.BudgetEnvelopeRepository;
+import com.budgettracker.persistence.DirectTxRunner;
 import com.budgettracker.persistence.TransactionRepository;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
-import java.sql.SQLException;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
@@ -61,9 +61,10 @@ class TransactionServiceTest {
 
     private TransactionService service() {
         return new TransactionService(
+                new DirectTxRunner(),
                 new ThrowTxRepo(),
-                new AccountService(new ThrowAccountRepo(), new ThrowTxRepo()),
-                new BudgetService(new ThrowEnvelopeRepo(), new ThrowTxRepo()));
+                new AccountService(new DirectTxRunner(), new ThrowAccountRepo(), new ThrowTxRepo()),
+                new BudgetService(new DirectTxRunner(), new ThrowEnvelopeRepo(), new ThrowTxRepo()));
     }
 
     private Transaction baseTx(TxDirection direction) {

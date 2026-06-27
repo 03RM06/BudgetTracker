@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<VBox xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.budgettracker.ui.controller.BudgetDialogController"
+      spacing="10" style="-fx-padding: 24; -fx-background-color: #f5f5f5;">
+
+    <Label text="New Budget Envelope" style="-fx-font-size: 16; -fx-font-weight: bold;"/>
+
+    <Label text="Envelope Name"/>
+    <TextField fx:id="nameField" promptText="e.g. Groceries May"/>
+
+    <Label text="Category (Expense categories only)"/>
+    <ChoiceBox fx:id="categoryChoice" prefWidth="260"/>
+
+    <Label text="Period Type"/>
+    <ChoiceBox fx:id="periodTypeChoice" prefWidth="180"/>
+
+    <Label text="Period Start"/>
+    <DatePicker fx:id="periodStartPicker"/>
+
+    <Label text="Limit Amount"/>
+    <TextField fx:id="limitField" promptText="e.g. 5000.00"/>
+
+    <Label text="Alert Threshold % (e.g. 80)"/>
+    <TextField fx:id="alertThresholdField" promptText="80"/>
+
+    <Label fx:id="errorLabel" styleClass="error-label" wrapText="true"/>
+
+    <HBox spacing="8" alignment="CENTER_RIGHT">
+        <Button text="Cancel" onAction="#onCancel" style="-fx-padding: 8 20;"/>
+        <Button text="Create" onAction="#onCreate"
+                style="-fx-background-color: #3498db; -fx-text-fill: white; -fx-padding: 8 20;"/>
+    </HBox>
+</VBox>

@@ -3,7 +3,6 @@ package com.budgettracker.persistence;
 import com.budgettracker.domain.BudgetEnvelope;
 import com.budgettracker.domain.PeriodType;
 import com.budgettracker.util.Dates;
-import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -12,14 +11,17 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class JdbcBudgetEnvelopeRepository implements BudgetEnvelopeRepository {
 
+    private static final Logger log = LoggerFactory.getLogger(JdbcBudgetEnvelopeRepository.class);
+
     @Override
-    public BudgetEnvelope save(BudgetEnvelope envelope) throws SQLException {
+    public BudgetEnvelope save(BudgetEnvelope envelope) {
         String sql = "INSERT INTO budget_envelopes (user_id, category_id, name, period_type, period_start, period_end, limit_amount, rollover, alert_threshold_pct, zone_id, active, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        Connection conn = Database.getConnection();
-        try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        try (PreparedStatement ps = ConnectionContext.requireConnection().prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setLong(1, envelope.getUserId());
             ps.setLong(2, envelope.getCategoryId());
             ps.setString(3, envelope.getName());
@@ -39,44 +41,47 @@ public class JdbcBudgetEnvelopeRepository implements BudgetEnvelopeRepository {
                     envelope.setId(keys.getLong(1));
                 }
             }
+        } catch (SQLException e) {
+            throw new DataAccessException("save budget envelope failed", e);
         }
         return envelope;
     }
 
     @Override
-    public Optional<BudgetEnvelope> findById(long id) throws SQLException {
+    public Optional<BudgetEnvelope> findById(long id) {
         String sql = "SELECT * FROM budget_envelopes WHERE id = ?";
-        Connection conn = Database.getConnection();
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (PreparedStatement ps = ConnectionContext.requireConnection().prepareStatement(sql)) {
             ps.setLong(1, id);
             try (ResultSet rs = ps.executeQuery()) {
                 return rs.next() ? Optional.of(mapRow(rs)) : Optional.empty();
             }
+        } catch (SQLException e) {
+            throw new DataAccessException("findById budget envelope failed", e);
         }
     }
 
     @Override
-    public List<BudgetEnvelope> findByUserId(long userId) throws SQLException {
+    public List<BudgetEnvelope> findByUserId(long userId) {
         String sql = "SELECT * FROM budget_envelopes WHERE user_id = ?";
-        Connection conn = Database.getConnection();
         List<BudgetEnvelope> list = new ArrayList<>();
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (PreparedStatement ps = ConnectionContext.requireConnection().prepareStatement(sql)) {
             ps.setLong(1, userId);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     list.add(mapRow(rs));
                 }
             }
+        } catch (SQLException e) {
+            throw new DataAccessException("findByUserId budget envelopes failed", e);
         }
         return list;
     }
 
     @Override
-    public List<BudgetEnvelope> findActiveByUserIdAndDate(long userId, LocalDate date) throws SQLException {
+    public List<BudgetEnvelope> findActiveByUserIdAndDate(long userId, LocalDate date) {
         String sql = "SELECT * FROM budget_envelopes WHERE user_id = ? AND active = 1 AND period_start <= ? AND period_end >= ?";
-        Connection conn = Database.getConnection();
         List<BudgetEnvelope> list = new ArrayList<>();
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (PreparedStatement ps = ConnectionContext.requireConnection().prepareStatement(sql)) {
             ps.setLong(1, userId);
             ps.setDate(2, Dates.toSqlDate(date));
             ps.setDate(3, Dates.toSqlDate(date));
@@ -85,29 +90,31 @@ public class JdbcBudgetEnvelopeRepository implements BudgetEnvelopeRepository {
                     list.add(mapRow(rs));
                 }
             }
+        } catch (SQLException e) {
+            throw new DataAccessException("findActiveByUserIdAndDate budget envelopes failed", e);
         }
         return list;
     }
 
     @Override
-    public Optional<BudgetEnvelope> findByCategoryAndPeriodStart(long userId, long categoryId, LocalDate periodStart) throws SQLException {
+    public Optional<BudgetEnvelope> findByCategoryAndPeriodStart(long userId, long categoryId, LocalDate periodStart) {
         String sql = "SELECT * FROM budget_envelopes WHERE user_id = ? AND category_id = ? AND period_start = ?";
-        Connection conn = Database.getConnection();
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (PreparedStatement ps = ConnectionContext.requireConnection().prepareStatement(sql)) {
             ps.setLong(1, userId);
             ps.setLong(2, categoryId);
             ps.setDate(3, Dates.toSqlDate(periodStart));
             try (ResultSet rs = ps.executeQuery()) {
                 return rs.next() ? Optional.of(mapRow(rs)) : Optional.empty();
             }
+        } catch (SQLException e) {
+            throw new DataAccessException("findByCategoryAndPeriodStart budget envelope failed", e);
         }
     }
 
     @Override
-    public void update(BudgetEnvelope envelope) throws SQLException {
+    public void update(BudgetEnvelope envelope) {
         String sql = "UPDATE budget_envelopes SET category_id = ?, name = ?, period_type = ?, period_start = ?, period_end = ?, limit_amount = ?, rollover = ?, alert_threshold_pct = ?, zone_id = ?, active = ?, updated_at = ? WHERE id = ?";
-        Connection conn = Database.getConnection();
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (PreparedStatement ps = ConnectionContext.requireConnection().prepareStatement(sql)) {
             ps.setLong(1, envelope.getCategoryId());
             ps.setString(2, envelope.getName());
             ps.setString(3, envelope.getPeriodType().name());
@@ -121,16 +128,19 @@ public class JdbcBudgetEnvelopeRepository implements BudgetEnvelopeRepository {
             ps.setTimestamp(11, Dates.toTimestamp(envelope.getUpdatedAt()));
             ps.setLong(12, envelope.getId());
             ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new DataAccessException("update budget envelope failed", e);
         }
     }
 
     @Override
-    public void deleteById(long id) throws SQLException {
+    public void deleteById(long id) {
         String sql = "DELETE FROM budget_envelopes WHERE id = ?";
-        Connection conn = Database.getConnection();
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (PreparedStatement ps = ConnectionContext.requireConnection().prepareStatement(sql)) {
             ps.setLong(1, id);
             ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new DataAccessException("deleteById budget envelope failed", e);
         }
     }
 

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<VBox xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.budgettracker.ui.controller.AccountsController"
+      spacing="16" style="-fx-padding: 10;">
+
+    <!-- Header row -->
+    <HBox alignment="CENTER_LEFT" spacing="12">
+        <Label text="Accounts" styleClass="section-header" HBox.hgrow="ALWAYS"/>
+        <Button fx:id="addButton" text="+ Add Account" onAction="#onAddAccount"
+                style="-fx-background-color: #3498db; -fx-text-fill: white; -fx-padding: 8 16;"/>
+    </HBox>
+
+    <Label fx:id="statusLabel" styleClass="error-label"/>
+
+    <TableView fx:id="accountTable" VBox.vgrow="ALWAYS">
+        <columns>
+            <TableColumn fx:id="colName"     text="Name"     prefWidth="200"/>
+            <TableColumn fx:id="colCurrency" text="Currency" prefWidth="90"/>
+            <TableColumn fx:id="colBalance"  text="Balance"  prefWidth="140"/>
+            <TableColumn fx:id="colType"     text="Type"     prefWidth="100"/>
+            <TableColumn fx:id="colArchived" text="Status"   prefWidth="90"/>
+        </columns>
+        <columnResizePolicy><TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/></columnResizePolicy>
+    </TableView>
+
+    <HBox spacing="8">
+        <Button text="Archive Selected" onAction="#onArchiveSelected"
+                style="-fx-background-color: #95a5a6; -fx-text-fill: white; -fx-padding: 6 14;"/>
+    </HBox>
+</VBox>

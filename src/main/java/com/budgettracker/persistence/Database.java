@@ -1,30 +1,49 @@
 package com.budgettracker.persistence;
 
 import com.budgettracker.util.AppConfig;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
+import org.flywaydb.core.Flyway;
+
+import javax.sql.DataSource;
 
 public final class Database {
 
-    private static Connection connection;
+    private static volatile HikariDataSource dataSource;
 
     private Database() {}
 
-    public static Connection getConnection() throws SQLException {
-        if (connection == null || connection.isClosed()) {
-            connection = DriverManager.getConnection(
-                AppConfig.getDbUrl(),
-                AppConfig.getDbUser(),
-                AppConfig.getDbPassword()
-            );
-        }
-        return connection;
+    public static synchronized void init() {
+        if (dataSource != null) return;
+
+        HikariConfig cfg = new HikariConfig();
+        cfg.setJdbcUrl(AppConfig.getDbUrl());
+        cfg.setUsername(AppConfig.getDbUser());
+        cfg.setPassword(AppConfig.getDbPassword());
+        cfg.setMaximumPoolSize(5);
+        cfg.setConnectionTimeout(30_000);
+
+        dataSource = new HikariDataSource(cfg);
+
+        Flyway.configure()
+              .dataSource(dataSource)
+              .locations("classpath:db/migration")
+              .schemas("budgettracker_db")
+              .baselineOnMigrate(true)
+              .baselineVersion("0")
+              .load()
+              .migrate();
     }
 
-    public static void close() throws SQLException {
-        if (connection != null && !connection.isClosed()) {
-            connection.close();
+    static DataSource dataSource() {
+        if (dataSource == null) throw new IllegalStateException("Database.init() has not been called");
+        return dataSource;
+    }
+
+    public static synchronized void shutdown() {
+        if (dataSource != null && !dataSource.isClosed()) {
+            dataSource.close();
         }
+        dataSource = null;
     }
 }

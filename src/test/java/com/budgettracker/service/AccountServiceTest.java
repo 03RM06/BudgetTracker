@@ -6,11 +6,11 @@ import com.budgettracker.domain.DuplicateResourceException;
 import com.budgettracker.domain.Transaction;
 import com.budgettracker.domain.TxDirection;
 import com.budgettracker.persistence.AccountRepository;
+import com.budgettracker.persistence.DirectTxRunner;
 import com.budgettracker.persistence.TransactionRepository;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
-import java.sql.SQLException;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -98,26 +98,26 @@ class AccountServiceTest {
     // ── recomputeBalance: single-row transfer model ───────────────────────────
 
     @Test
-    void recomputeBalance_sourceAccountIsDebited() throws SQLException {
+    void recomputeBalance_sourceAccountIsDebited() {
         StubAccountRepo accountRepo = new StubAccountRepo();
         StubTxRepo txRepo = new StubTxRepo();
         accountRepo.store.add(account(10L, 1L, new BigDecimal("1000.0000")));
         txRepo.byAccount.add(transferTx(10L, 20L, new BigDecimal("300.0000")));
 
-        new AccountService(accountRepo, txRepo).recomputeBalance(10L);
+        new AccountService(new DirectTxRunner(), accountRepo, txRepo).recomputeBalance(10L);
 
         assertEquals(0, accountRepo.capturedBalance.compareTo(new BigDecimal("700.0000")),
                 "Source balance = opening - transfer amount");
     }
 
     @Test
-    void recomputeBalance_destinationAccountIsCredited() throws SQLException {
+    void recomputeBalance_destinationAccountIsCredited() {
         StubAccountRepo accountRepo = new StubAccountRepo();
         StubTxRepo txRepo = new StubTxRepo();
         accountRepo.store.add(account(20L, 1L, new BigDecimal("500.0000")));
         txRepo.creditTransfers.add(transferTx(10L, 20L, new BigDecimal("300.0000")));
 
-        new AccountService(accountRepo, txRepo).recomputeBalance(20L);
+        new AccountService(new DirectTxRunner(), accountRepo, txRepo).recomputeBalance(20L);
 
         assertEquals(0, accountRepo.capturedBalance.compareTo(new BigDecimal("800.0000")),
                 "Destination balance = opening + credited transfer");
@@ -127,33 +127,33 @@ class AccountServiceTest {
 
     @Test
     void createAccount_blankNameThrows() {
-        AccountService svc = new AccountService(new StubAccountRepo(), new StubTxRepo());
+        AccountService svc = new AccountService(new DirectTxRunner(), new StubAccountRepo(), new StubTxRepo());
         assertThrows(IllegalArgumentException.class,
                 () -> svc.createAccount(1L, "  ", AccountType.CASH, new BigDecimal("0"), "PHP"));
     }
 
     @Test
     void createAccount_nullOpeningBalanceThrows() {
-        AccountService svc = new AccountService(new StubAccountRepo(), new StubTxRepo());
+        AccountService svc = new AccountService(new DirectTxRunner(), new StubAccountRepo(), new StubTxRepo());
         assertThrows(IllegalArgumentException.class,
                 () -> svc.createAccount(1L, "Wallet", AccountType.CASH, null, "PHP"));
     }
 
     @Test
     void createAccount_negativeOpeningBalanceThrows() {
-        AccountService svc = new AccountService(new StubAccountRepo(), new StubTxRepo());
+        AccountService svc = new AccountService(new DirectTxRunner(), new StubAccountRepo(), new StubTxRepo());
         assertThrows(IllegalArgumentException.class,
                 () -> svc.createAccount(1L, "Wallet", AccountType.CASH, new BigDecimal("-1"), "PHP"));
     }
 
     @Test
-    void createAccount_duplicateActiveNameThrows() throws SQLException {
+    void createAccount_duplicateActiveNameThrows() {
         StubAccountRepo accountRepo = new StubAccountRepo();
         Account existing = account(1L, 1L, BigDecimal.ZERO);
         existing.setName("Savings");
         accountRepo.store.add(existing);
 
-        AccountService svc = new AccountService(accountRepo, new StubTxRepo());
+        AccountService svc = new AccountService(new DirectTxRunner(), accountRepo, new StubTxRepo());
         assertThrows(DuplicateResourceException.class,
                 () -> svc.createAccount(1L, "savings", AccountType.BANK, new BigDecimal("100"), "PHP"));
     }

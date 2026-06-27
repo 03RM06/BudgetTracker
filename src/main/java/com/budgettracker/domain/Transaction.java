@@ -11,6 +11,7 @@ public class Transaction {
     private long accountId;
     private Long categoryId;
     private TxDirection direction;
+    private TxStatus status = TxStatus.POSTED;
     private BigDecimal amount;
     private String currency;
     private LocalDate occurredOn;
@@ -62,6 +63,9 @@ public class Transaction {
 
     public TxDirection getDirection() { return direction; }
     public void setDirection(TxDirection direction) { this.direction = direction; }
+
+    public TxStatus getStatus() { return status; }
+    public void setStatus(TxStatus status) { this.status = status; }
 
     public BigDecimal getAmount() { return amount; }
     public void setAmount(BigDecimal amount) { this.amount = amount; }

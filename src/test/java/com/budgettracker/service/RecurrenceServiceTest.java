@@ -8,12 +8,12 @@ import com.budgettracker.domain.Transaction;
 import com.budgettracker.domain.TxDirection;
 import com.budgettracker.persistence.AccountRepository;
 import com.budgettracker.persistence.BudgetEnvelopeRepository;
+import com.budgettracker.persistence.DirectTxRunner;
 import com.budgettracker.persistence.RecurringTransactionRepository;
 import com.budgettracker.persistence.TransactionRepository;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
-import java.sql.SQLException;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -21,7 +21,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -93,9 +92,10 @@ class RecurrenceServiceTest {
         final List<Transaction> added = new ArrayList<>();
 
         CapturingTxService() {
-            super(new ThrowTxRepo(),
-                    new AccountService(new ThrowAccountRepo(), new ThrowTxRepo()),
-                    new BudgetService(new ThrowEnvelopeRepo(), new ThrowTxRepo()));
+            super(new DirectTxRunner(),
+                    new ThrowTxRepo(),
+                    new AccountService(new DirectTxRunner(), new ThrowAccountRepo(), new ThrowTxRepo()),
+                    new BudgetService(new DirectTxRunner(), new ThrowEnvelopeRepo(), new ThrowTxRepo()));
         }
 
         @Override
@@ -108,10 +108,10 @@ class RecurrenceServiceTest {
     // ── helpers ───────────────────────────────────────────────────────────────
 
     private RecurrenceService serviceWithNoopDeps() {
-        return new RecurrenceService(new ThrowRecurringRepo(), new ThrowTxRepo(),
-                new TransactionService(new ThrowTxRepo(),
-                        new AccountService(new ThrowAccountRepo(), new ThrowTxRepo()),
-                        new BudgetService(new ThrowEnvelopeRepo(), new ThrowTxRepo())));
+        return new RecurrenceService(new DirectTxRunner(), new ThrowRecurringRepo(), new ThrowTxRepo(),
+                new TransactionService(new DirectTxRunner(), new ThrowTxRepo(),
+                        new AccountService(new DirectTxRunner(), new ThrowAccountRepo(), new ThrowTxRepo()),
+                        new BudgetService(new DirectTxRunner(), new ThrowEnvelopeRepo(), new ThrowTxRepo())));
     }
 
     private RecurringTransaction rule(Frequency freq, int interval) {
@@ -240,7 +240,7 @@ class RecurrenceServiceTest {
         txRepo.byRecurringId.put(1L, List.of(existing));
 
         CapturingTxService capturingTxService = new CapturingTxService();
-        RecurrenceService svc = new RecurrenceService(recurringRepo, txRepo, capturingTxService);
+        RecurrenceService svc = new RecurrenceService(new DirectTxRunner(), recurringRepo, txRepo, capturingTxService);
 
         svc.materializeDue(1L);
 

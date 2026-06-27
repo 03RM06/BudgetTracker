@@ -47,6 +47,8 @@ Enums (in `domain`):
 - `IncomeNature { FIXED, VARIABLE, ONE_TIME }`
 - `Frequency { DAILY, WEEKLY, BIWEEKLY, MONTHLY, QUARTERLY, YEARLY }`
 - `PeriodType { WEEKLY, MONTHLY, YEARLY, CUSTOM }`
+- `BudgetStatus { OK, WARN, OVER }`
+- `TxStatus { PENDING, POSTED, CANCELLED }`
 
 ### 2.1 User
 | Field | Java type | Notes |
@@ -298,7 +300,7 @@ CREATE TABLE budget_envelopes (
   <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   <maven.compiler.source>25</maven.compiler.source>
   <maven.compiler.target>25</maven.compiler.target>
-  <javafx.version>25</javafx.version>
+  <javafx.version>25.0.1</javafx.version>
   <junit.version>5.11.3</junit.version>
 </properties>
 

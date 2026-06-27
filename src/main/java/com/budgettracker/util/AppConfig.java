@@ -17,7 +17,18 @@ public final class AppConfig {
 
     private AppConfig() {}
 
-    public static String getDbUrl()      { return PROPS.getProperty("db.url"); }
-    public static String getDbUser()     { return PROPS.getProperty("db.user"); }
-    public static String getDbPassword() { return PROPS.getProperty("db.password"); }
+    public static String getDbUrl() {
+        String env = System.getenv("BT_DB_URL");
+        return env != null ? env : PROPS.getProperty("db.url");
+    }
+
+    public static String getDbUser() {
+        String env = System.getenv("BT_DB_USER");
+        return env != null ? env : PROPS.getProperty("db.user");
+    }
+
+    public static String getDbPassword() {
+        String env = System.getenv("BT_DB_PASSWORD");
+        return env != null ? env : PROPS.getProperty("db.password");
+    }
 }

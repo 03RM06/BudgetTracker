@@ -74,22 +74,49 @@
 - **Test classes:** AccountServiceTest (6), BudgetServiceTest (9), RecurrenceServiceTest (9), TransactionServiceTest (7)
 
 ## Cycle 7 — JavaFX UI layer
-- **Task:** Login/registration screen, main Dashboard shell, and primary FXML views (Accounts, Transactions, Budget Envelopes, Experience timeline)
+- **Task:** Login/registration screen, main Dashboard shell, and all FXML views
 - **Owner:** Developer
-- **Status:** Planned
-- **Scope:**
-  - `App.java` fully wired (loads Login.fxml on start)
-  - `LoginController.java` + `Login.fxml` — email/password form, calls UserService.login/register
-  - `DashboardController.java` + `Dashboard.fxml` — nav sidebar, center content area swaps views
-  - `AccountsController.java` + `Accounts.fxml` — table of accounts, add/archive actions
-  - `TransactionsController.java` + `Transactions.fxml` — filterable transaction list, add/delete
-  - `BudgetController.java` + `Budget.fxml` — envelope list with OK/WARN/OVER color badges
-  - `RecurringController.java` + `Recurring.fxml` — recurring rules list, enable/disable
-  - View models in `ui` package for data binding; no repository imports in any controller
-  - CSS in `src/main/resources/css/` for basic styling
+- **Status:** Complete
+- **Delivered:**
+  - `App.java` fully wired (loads Login.fxml; calls Database.init/shutdown)
+  - `AppContext.java` — singleton composition root (wires all repos → services → controllers)
+  - `Session.java` — per-login session holder (userId, email, displayName)
+  - 12 FXML/controller pairs: Login, Dashboard, DashboardHome, Accounts, AccountDialog, Transactions, TransactionDialog, Budgets, BudgetDialog, Recurring, RecurringDialog, PendingConfirmDialog
+  - `src/main/resources/css/app.css` — base stylesheet (nav sidebar, cards, WARN/OVER badges)
+  - H2 pending-confirm flow (PendingConfirmController); H3 ownership checks; H5 input validation; M1 budget alerts; M3 edit-transaction flow
+
+## Cycle 8 — Architecture audit & production hardening
+- **Task:** Comprehensive audit + full improvement roadmap + implementation across all Critical/High/Medium/Low findings
+- **Owner:** Orchestrator-led multi-agent (Architect, Developer, QA, Documentation)
+- **Status:** Complete
+- **Key deliverables:**
+  - **C1** Atomic service operations — `JdbcTxRunner` with commit/rollback; `addTransaction`, `deleteTransaction`, `updateTransaction` are fully atomic
+  - **C2** Connection infrastructure — single static connection replaced with HikariCP pool + ThreadLocal `ConnectionContext` + `java.sql`-free `TxRunner` interface; `DataAccessException` (unchecked); `Repositories` factory; `DirectTxRunner` test double
+  - **C3** Cross-currency fix — destination credited with `amount.multiply(exchangeRate).setScale(4, HALF_EVEN)` (was crediting raw source amount)
+  - **C4** Secrets removed from VCS — `config.properties` gitignored; env-var-first (`BT_DB_URL/USER/PASSWORD`); `config.properties.example` with placeholders
+  - **H1** Recurrence timezone — `LocalDate.now(ZoneId.of(rule.getZoneId()))` per rule inside loop
+  - **H2** Variable income — `TxStatus {PENDING, POSTED, CANCELLED}` on `transactions`; `confirmPending` / `cancelPending` service methods
+  - **H3** Ownership enforcement — userId validated on all mutating service operations
+  - **H4** Logging — SLF4J 2.0.16 + Logback 1.5.12; all catch-blocks log before throwing
+  - **H5** Input validation — email regex, password length ≥8, currency `[A-Z]{3}`, amount >0, date not null
+  - **M1** Budget alerts surfaced — WARN/OVER envelopes shown in Dashboard Home + Budgets screen
+  - **M3** Edit-transaction — `updateTransaction` with full account/category deduplication and re-evaluation
+  - **M5** Flyway migrations — V1 (schema), V2 (transfer_account_id index), V3 (status column); `baselineOnMigrate=true`
+  - **L1** README.md — 10-section setup/run guide
+  - **L2** GitHub Actions CI — `.github/workflows/ci.yml` (MySQL 8 service, Oracle Java 25)
+  - **L3** nbactions.xml gitignored
+  - **L4** ARCHITECTURE.md patched (javafx.version, BudgetStatus, TxStatus enum values)
+  - **L5** module-info.java deferred (jbcrypt/flyway-core/mysql-connector-j have no Automatic-Module-Name); classpath mode documented in pom.xml
+- **Test count:** 31 → 60 (all pass; 29 new tests covering atomicity, currency, timezone, pending state machine, ThreadLocal)
+- **Residual items for next cycle:**
+  1. `RecurringTransactionRepository.update()` not yet implemented — `enableRule`/`disableRule` stub present but persistence not wired
+  2. No integration tests for `JdbcTxRunner` ThreadLocal teardown (requires H2/Testcontainers)
+  3. No automated UI tests (requires display + MySQL)
 
 ## Cycle Log
 - 2026-06-25 — Cycle 1 architecture completed. Q1–Q5 resolved.
 - 2026-06-25 — Cycle 2 complete. Maven scaffold + full domain layer verified.
 - 2026-06-25 — Cycle 3 started. Developer building util + Database + repo interfaces.
-- 2026-06-26 — Cycle 6 complete. 31 JUnit 5 unit tests written and passing. No Mockito, no DB. advanceDate made package-private. Cycle 7 (JavaFX UI) is next.
+- 2026-06-26 — Cycle 6 complete. 31 JUnit 5 unit tests written and passing. No Mockito, no DB. advanceDate made package-private.
+- 2026-06-27 — Cycle 7 complete. Full JavaFX UI delivered (12 FXML/controller pairs). App launches from Login screen.
+- 2026-06-27 — Cycle 8 complete. Production hardening: HikariCP, Flyway, atomic transactions, cross-currency fix, timezone fix, logging, UI validation, budget alerts, CI. Test count: 60.

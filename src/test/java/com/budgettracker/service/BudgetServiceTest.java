@@ -6,11 +6,11 @@ import com.budgettracker.domain.PeriodType;
 import com.budgettracker.domain.Transaction;
 import com.budgettracker.domain.TxDirection;
 import com.budgettracker.persistence.BudgetEnvelopeRepository;
+import com.budgettracker.persistence.DirectTxRunner;
 import com.budgettracker.persistence.TransactionRepository;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
-import java.sql.SQLException;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -119,7 +119,7 @@ class BudgetServiceTest {
                 new BigDecimal("1000"), false);
         txRepo.all.add(expenseTx(1L, 100L, LocalDate.of(2026, 6, 10), new BigDecimal("500")));
 
-        EnvelopeStatus status = new BudgetService(envelopeRepo, txRepo).evaluate(env);
+        EnvelopeStatus status = new BudgetService(new DirectTxRunner(), envelopeRepo, txRepo).evaluate(env);
 
         assertEquals(BudgetStatus.OK, status.getStatus());
         assertEquals(0, status.getSpent().compareTo(new BigDecimal("500")));
@@ -134,7 +134,7 @@ class BudgetServiceTest {
                 new BigDecimal("1000"), false);
         txRepo.all.add(expenseTx(1L, 100L, LocalDate.of(2026, 6, 10), new BigDecimal("800")));
 
-        EnvelopeStatus status = new BudgetService(envelopeRepo, txRepo).evaluate(env);
+        EnvelopeStatus status = new BudgetService(new DirectTxRunner(), envelopeRepo, txRepo).evaluate(env);
 
         assertEquals(BudgetStatus.WARN, status.getStatus(),
                 "Spent exactly at 80% threshold should be WARN");
@@ -149,7 +149,7 @@ class BudgetServiceTest {
                 new BigDecimal("1000"), false);
         txRepo.all.add(expenseTx(1L, 100L, LocalDate.of(2026, 6, 10), new BigDecimal("1200")));
 
-        EnvelopeStatus status = new BudgetService(envelopeRepo, txRepo).evaluate(env);
+        EnvelopeStatus status = new BudgetService(new DirectTxRunner(), envelopeRepo, txRepo).evaluate(env);
 
         assertEquals(BudgetStatus.OVER, status.getStatus());
     }
@@ -176,7 +176,7 @@ class BudgetServiceTest {
         // current: spent 500
         txRepo.all.add(expenseTx(1L, 100L, LocalDate.of(2026, 6, 15), new BigDecimal("500")));
 
-        EnvelopeStatus status = new BudgetService(envelopeRepo, txRepo).evaluate(current);
+        EnvelopeStatus status = new BudgetService(new DirectTxRunner(), envelopeRepo, txRepo).evaluate(current);
 
         assertEquals(0, status.getEffectiveLimit().compareTo(new BigDecimal("1400")),
                 "effectiveLimit = currentLimit(1000) + priorRemaining(400)");
@@ -187,9 +187,9 @@ class BudgetServiceTest {
     // ── createEnvelope: period-end computation ────────────────────────────────
 
     @Test
-    void createEnvelope_weekly_periodEndIsSixDaysAfterStart() throws SQLException {
+    void createEnvelope_weekly_periodEndIsSixDaysAfterStart() {
         StubEnvelopeRepo envelopeRepo = new StubEnvelopeRepo();
-        new BudgetService(envelopeRepo, new StubTxRepo())
+        new BudgetService(new DirectTxRunner(), envelopeRepo, new StubTxRepo())
                 .createEnvelope(1L, 100L, "Food", PeriodType.WEEKLY,
                         LocalDate.of(2026, 6, 1), new BigDecimal("500"),
                         false, new BigDecimal("80"), "Asia/Manila");
@@ -198,9 +198,9 @@ class BudgetServiceTest {
     }
 
     @Test
-    void createEnvelope_monthly_periodEndIsLastDayOfMonth() throws SQLException {
+    void createEnvelope_monthly_periodEndIsLastDayOfMonth() {
         StubEnvelopeRepo envelopeRepo = new StubEnvelopeRepo();
-        new BudgetService(envelopeRepo, new StubTxRepo())
+        new BudgetService(new DirectTxRunner(), envelopeRepo, new StubTxRepo())
                 .createEnvelope(1L, 100L, "Food", PeriodType.MONTHLY,
                         LocalDate.of(2026, 6, 1), new BigDecimal("500"),
                         false, new BigDecimal("80"), "Asia/Manila");
@@ -209,9 +209,9 @@ class BudgetServiceTest {
     }
 
     @Test
-    void createEnvelope_yearly_periodEndIsDecember31() throws SQLException {
+    void createEnvelope_yearly_periodEndIsDecember31() {
         StubEnvelopeRepo envelopeRepo = new StubEnvelopeRepo();
-        new BudgetService(envelopeRepo, new StubTxRepo())
+        new BudgetService(new DirectTxRunner(), envelopeRepo, new StubTxRepo())
                 .createEnvelope(1L, 100L, "Food", PeriodType.YEARLY,
                         LocalDate.of(2026, 6, 1), new BigDecimal("5000"),
                         false, new BigDecimal("80"), "Asia/Manila");
@@ -221,7 +221,7 @@ class BudgetServiceTest {
 
     @Test
     void createEnvelope_customPeriodTypeThrows() {
-        BudgetService svc = new BudgetService(new StubEnvelopeRepo(), new StubTxRepo());
+        BudgetService svc = new BudgetService(new DirectTxRunner(), new StubEnvelopeRepo(), new StubTxRepo());
         assertThrows(IllegalArgumentException.class,
                 () -> svc.createEnvelope(1L, 100L, "Food", PeriodType.CUSTOM,
                         LocalDate.of(2026, 6, 1), new BigDecimal("500"),
@@ -230,7 +230,7 @@ class BudgetServiceTest {
 
     @Test
     void createEnvelope_zeroLimitThrows() {
-        BudgetService svc = new BudgetService(new StubEnvelopeRepo(), new StubTxRepo());
+        BudgetService svc = new BudgetService(new DirectTxRunner(), new StubEnvelopeRepo(), new StubTxRepo());
         assertThrows(IllegalArgumentException.class,
                 () -> svc.createEnvelope(1L, 100L, "Food", PeriodType.MONTHLY,
                         LocalDate.of(2026, 6, 1), BigDecimal.ZERO,

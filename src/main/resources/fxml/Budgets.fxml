@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<VBox xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.budgettracker.ui.controller.BudgetsController"
+      spacing="16" style="-fx-padding: 10;">
+
+    <HBox alignment="CENTER_LEFT" spacing="12">
+        <Label text="Budget Envelopes" styleClass="section-header" HBox.hgrow="ALWAYS"/>
+        <Button text="+ Add Envelope" onAction="#onAddEnvelope"
+                style="-fx-background-color: #3498db; -fx-text-fill: white; -fx-padding: 8 16;"/>
+    </HBox>
+
+    <Label fx:id="statusLabel" styleClass="error-label"/>
+
+    <TableView fx:id="budgetTable" VBox.vgrow="ALWAYS">
+        <columns>
+            <TableColumn fx:id="colName"     text="Name"     prefWidth="160"/>
+            <TableColumn fx:id="colPeriod"   text="Period"   prefWidth="100"/>
+            <TableColumn fx:id="colLimit"    text="Limit"    prefWidth="110"/>
+            <TableColumn fx:id="colSpent"    text="Spent"    prefWidth="110"/>
+            <TableColumn fx:id="colRemaining" text="Remaining" prefWidth="110"/>
+            <TableColumn fx:id="colStatus"   text="Status"   prefWidth="90"/>
+        </columns>
+        <columnResizePolicy><TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/></columnResizePolicy>
+    </TableView>
+
+    <HBox spacing="8">
+        <Button text="Delete Selected" onAction="#onDeleteSelected"
+                style="-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-padding: 6 14;"/>
+    </HBox>
+</VBox>

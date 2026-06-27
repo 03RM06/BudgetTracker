@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<VBox xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.budgettracker.ui.controller.TransactionsController"
+      spacing="14" style="-fx-padding: 10;">
+
+    <!-- Header row -->
+    <HBox alignment="CENTER_LEFT" spacing="12">
+        <Label text="Transactions" styleClass="section-header" HBox.hgrow="ALWAYS"/>
+        <Button text="+ Add Transaction" onAction="#onAddTransaction"
+                style="-fx-background-color: #3498db; -fx-text-fill: white; -fx-padding: 8 16;"/>
+    </HBox>
+
+    <!-- Filter row -->
+    <HBox spacing="10" alignment="CENTER_LEFT">
+        <Label text="From:"/>
+        <DatePicker fx:id="fromDate" promptText="From date"/>
+        <Label text="To:"/>
+        <DatePicker fx:id="toDate" promptText="To date"/>
+        <ChoiceBox fx:id="directionFilter" prefWidth="120"/>
+        <Button text="Filter" onAction="#onFilter"
+                style="-fx-padding: 6 14;"/>
+        <Button text="Clear" onAction="#onClearFilter"
+                style="-fx-padding: 6 14;"/>
+    </HBox>
+
+    <Label fx:id="statusLabel" styleClass="error-label"/>
+
+    <TableView fx:id="txTable" VBox.vgrow="ALWAYS">
+        <columns>
+            <TableColumn fx:id="colDate"        text="Date"        prefWidth="100"/>
+            <TableColumn fx:id="colDescription" text="Description" prefWidth="200"/>
+            <TableColumn fx:id="colAmount"      text="Amount"      prefWidth="120"/>
+            <TableColumn fx:id="colDirection"   text="Direction"   prefWidth="100"/>
+            <TableColumn fx:id="colStatus"      text="Status"      prefWidth="90"/>
+            <TableColumn fx:id="colAccount"     text="Account"     prefWidth="130"/>
+        </columns>
+        <columnResizePolicy><TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/></columnResizePolicy>
+    </TableView>
+
+    <HBox spacing="8">
+        <Button text="Edit Selected"   onAction="#onEditSelected"
+                style="-fx-padding: 6 14;"/>
+        <Button text="Delete Selected" onAction="#onDeleteSelected"
+                style="-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-padding: 6 14;"/>
+    </HBox>
+</VBox>

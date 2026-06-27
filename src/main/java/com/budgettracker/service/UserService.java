@@ -5,16 +5,23 @@ import com.budgettracker.domain.DuplicateResourceException;
 import com.budgettracker.domain.InvalidTransactionException;
 import com.budgettracker.domain.ResourceNotFoundException;
 import com.budgettracker.domain.User;
+import com.budgettracker.persistence.DataAccessException;
+import com.budgettracker.persistence.TxRunner;
 import com.budgettracker.persistence.UserRepository;
 import com.budgettracker.util.PasswordHasher;
-import java.sql.SQLException;
 import java.time.Instant;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class UserService {
 
+    private static final Logger log = LoggerFactory.getLogger(UserService.class);
+
+    private final TxRunner txRunner;
     private final UserRepository userRepo;
 
-    public UserService(UserRepository userRepo) {
+    public UserService(TxRunner txRunner, UserRepository userRepo) {
+        this.txRunner = txRunner;
         this.userRepo = userRepo;
     }
 
@@ -44,7 +51,8 @@ public class UserService {
             return userRepo.save(user);
         } catch (DuplicateResourceException e) {
             throw e;
-        } catch (SQLException e) {
+        } catch (DataAccessException e) {
+            log.error("Failed to register user email={}", email, e);
             throw new BudgetTrackerException("Failed to register user", e);
         }
     }
@@ -59,7 +67,8 @@ public class UserService {
             return user;
         } catch (ResourceNotFoundException | InvalidTransactionException e) {
             throw e;
-        } catch (SQLException e) {
+        } catch (DataAccessException e) {
+            log.error("Login failed for email={}", email, e);
             throw new BudgetTrackerException("Login failed", e);
         }
     }
@@ -70,7 +79,8 @@ public class UserService {
                     .orElseThrow(() -> new ResourceNotFoundException("User not found: " + id));
         } catch (ResourceNotFoundException e) {
             throw e;
-        } catch (SQLException e) {
+        } catch (DataAccessException e) {
+            log.error("Failed to find user id={}", id, e);
             throw new BudgetTrackerException("Failed to find user", e);
         }
     }

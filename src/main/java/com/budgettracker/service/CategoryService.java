@@ -5,15 +5,22 @@ import com.budgettracker.domain.Category;
 import com.budgettracker.domain.CategoryType;
 import com.budgettracker.domain.DuplicateResourceException;
 import com.budgettracker.persistence.CategoryRepository;
-import java.sql.SQLException;
+import com.budgettracker.persistence.DataAccessException;
+import com.budgettracker.persistence.TxRunner;
 import java.time.Instant;
 import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class CategoryService {
 
+    private static final Logger log = LoggerFactory.getLogger(CategoryService.class);
+
+    private final TxRunner txRunner;
     private final CategoryRepository categoryRepo;
 
-    public CategoryService(CategoryRepository categoryRepo) {
+    public CategoryService(TxRunner txRunner, CategoryRepository categoryRepo) {
+        this.txRunner = txRunner;
         this.categoryRepo = categoryRepo;
     }
 
@@ -39,7 +46,8 @@ public class CategoryService {
             return categoryRepo.save(category);
         } catch (DuplicateResourceException e) {
             throw e;
-        } catch (SQLException e) {
+        } catch (DataAccessException e) {
+            log.error("Failed to create category name={}", name, e);
             throw new BudgetTrackerException("Failed to create category", e);
         }
     }
@@ -47,7 +55,8 @@ public class CategoryService {
     public List<Category> getCategoriesByType(long userId, CategoryType type) {
         try {
             return categoryRepo.findByUserIdAndType(userId, type);
-        } catch (SQLException e) {
+        } catch (DataAccessException e) {
+            log.error("Failed to fetch categories for userId={} type={}", userId, type, e);
             throw new BudgetTrackerException("Failed to fetch categories", e);
         }
     }
@@ -55,7 +64,8 @@ public class CategoryService {
     public List<Category> getAllCategories(long userId) {
         try {
             return categoryRepo.findByUserId(userId);
-        } catch (SQLException e) {
+        } catch (DataAccessException e) {
+            log.error("Failed to fetch categories for userId={}", userId, e);
             throw new BudgetTrackerException("Failed to fetch categories", e);
         }
     }
@@ -63,7 +73,8 @@ public class CategoryService {
     public void deleteCategory(long categoryId) {
         try {
             categoryRepo.deleteById(categoryId);
-        } catch (SQLException e) {
+        } catch (DataAccessException e) {
+            log.error("Failed to delete category id={}", categoryId, e);
             throw new BudgetTrackerException("Failed to delete category", e);
         }
     }

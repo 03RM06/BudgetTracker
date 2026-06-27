@@ -3,7 +3,6 @@ package com.budgettracker.persistence;
 import com.budgettracker.domain.Category;
 import com.budgettracker.domain.CategoryType;
 import com.budgettracker.util.Dates;
-import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -12,14 +11,17 @@ import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class JdbcCategoryRepository implements CategoryRepository {
 
+    private static final Logger log = LoggerFactory.getLogger(JdbcCategoryRepository.class);
+
     @Override
-    public Category save(Category category) throws SQLException {
+    public Category save(Category category) {
         String sql = "INSERT INTO categories (user_id, name, category_type, parent_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)";
-        Connection conn = Database.getConnection();
-        try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        try (PreparedStatement ps = ConnectionContext.requireConnection().prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setLong(1, category.getUserId());
             ps.setString(2, category.getName());
             ps.setString(3, category.getType().name());
@@ -36,44 +38,47 @@ public class JdbcCategoryRepository implements CategoryRepository {
                     category.setId(keys.getLong(1));
                 }
             }
+        } catch (SQLException e) {
+            throw new DataAccessException("save category failed", e);
         }
         return category;
     }
 
     @Override
-    public Optional<Category> findById(long id) throws SQLException {
+    public Optional<Category> findById(long id) {
         String sql = "SELECT * FROM categories WHERE id = ?";
-        Connection conn = Database.getConnection();
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (PreparedStatement ps = ConnectionContext.requireConnection().prepareStatement(sql)) {
             ps.setLong(1, id);
             try (ResultSet rs = ps.executeQuery()) {
                 return rs.next() ? Optional.of(mapRow(rs)) : Optional.empty();
             }
+        } catch (SQLException e) {
+            throw new DataAccessException("findById category failed", e);
         }
     }
 
     @Override
-    public List<Category> findByUserId(long userId) throws SQLException {
+    public List<Category> findByUserId(long userId) {
         String sql = "SELECT * FROM categories WHERE user_id = ?";
-        Connection conn = Database.getConnection();
         List<Category> list = new ArrayList<>();
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (PreparedStatement ps = ConnectionContext.requireConnection().prepareStatement(sql)) {
             ps.setLong(1, userId);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     list.add(mapRow(rs));
                 }
             }
+        } catch (SQLException e) {
+            throw new DataAccessException("findByUserId categories failed", e);
         }
         return list;
     }
 
     @Override
-    public List<Category> findByUserIdAndType(long userId, CategoryType type) throws SQLException {
+    public List<Category> findByUserIdAndType(long userId, CategoryType type) {
         String sql = "SELECT * FROM categories WHERE user_id = ? AND category_type = ?";
-        Connection conn = Database.getConnection();
         List<Category> list = new ArrayList<>();
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (PreparedStatement ps = ConnectionContext.requireConnection().prepareStatement(sql)) {
             ps.setLong(1, userId);
             ps.setString(2, type.name());
             try (ResultSet rs = ps.executeQuery()) {
@@ -81,15 +86,16 @@ public class JdbcCategoryRepository implements CategoryRepository {
                     list.add(mapRow(rs));
                 }
             }
+        } catch (SQLException e) {
+            throw new DataAccessException("findByUserIdAndType categories failed", e);
         }
         return list;
     }
 
     @Override
-    public void update(Category category) throws SQLException {
+    public void update(Category category) {
         String sql = "UPDATE categories SET name = ?, category_type = ?, parent_id = ?, updated_at = ? WHERE id = ?";
-        Connection conn = Database.getConnection();
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (PreparedStatement ps = ConnectionContext.requireConnection().prepareStatement(sql)) {
             ps.setString(1, category.getName());
             ps.setString(2, category.getType().name());
             if (category.getParentId() == null) {
@@ -100,16 +106,19 @@ public class JdbcCategoryRepository implements CategoryRepository {
             ps.setTimestamp(4, Dates.toTimestamp(category.getUpdatedAt()));
             ps.setLong(5, category.getId());
             ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new DataAccessException("update category failed", e);
         }
     }
 
     @Override
-    public void deleteById(long id) throws SQLException {
+    public void deleteById(long id) {
         String sql = "DELETE FROM categories WHERE id = ?";
-        Connection conn = Database.getConnection();
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (PreparedStatement ps = ConnectionContext.requireConnection().prepareStatement(sql)) {
             ps.setLong(1, id);
             ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new DataAccessException("deleteById category failed", e);
         }
     }
 
