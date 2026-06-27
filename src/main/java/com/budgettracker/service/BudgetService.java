@@ -61,19 +61,21 @@ public class BudgetService {
     }
 
     public List<EnvelopeStatus> evaluateEnvelopes(long userId, long categoryId, LocalDate date) {
-        try {
-            List<BudgetEnvelope> active = envelopeRepo.findActiveByUserIdAndDate(userId, date);
-            List<EnvelopeStatus> results = new ArrayList<>();
-            for (BudgetEnvelope envelope : active) {
-                if (envelope.getCategoryId() == categoryId) {
-                    results.add(evaluate(envelope));
+        return txRunner.inTransaction(() -> {
+            try {
+                List<BudgetEnvelope> active = envelopeRepo.findActiveByUserIdAndDate(userId, date);
+                List<EnvelopeStatus> results = new ArrayList<>();
+                for (BudgetEnvelope envelope : active) {
+                    if (envelope.getCategoryId() == categoryId) {
+                        results.add(evaluate(envelope));
+                    }
                 }
+                return results;
+            } catch (DataAccessException e) {
+                log.error("Failed to evaluate envelopes for userId={} categoryId={}", userId, categoryId, e);
+                throw new BudgetTrackerException("Failed to evaluate envelopes", e);
             }
-            return results;
-        } catch (DataAccessException e) {
-            log.error("Failed to evaluate envelopes for userId={} categoryId={}", userId, categoryId, e);
-            throw new BudgetTrackerException("Failed to evaluate envelopes", e);
-        }
+        });
     }
 
     public BudgetEnvelope createEnvelope(long userId, long categoryId, String name,
@@ -108,33 +110,35 @@ public class BudgetService {
                                         LocalDate periodEnd, BigDecimal limitAmount,
                                         boolean rollover, BigDecimal alertThresholdPct,
                                         String zoneId) {
-        try {
-            if (envelopeRepo.findByCategoryAndPeriodStart(userId, categoryId, periodStart).isPresent()) {
-                throw new DuplicateResourceException(
-                        "A budget envelope for this category and period start already exists");
+        return txRunner.inTransaction(() -> {
+            try {
+                if (envelopeRepo.findByCategoryAndPeriodStart(userId, categoryId, periodStart).isPresent()) {
+                    throw new DuplicateResourceException(
+                            "A budget envelope for this category and period start already exists");
+                }
+                BudgetEnvelope envelope = new BudgetEnvelope();
+                envelope.setUserId(userId);
+                envelope.setCategoryId(categoryId);
+                envelope.setName(name);
+                envelope.setPeriodType(periodType);
+                envelope.setPeriodStart(periodStart);
+                envelope.setPeriodEnd(periodEnd);
+                envelope.setLimitAmount(limitAmount);
+                envelope.setRollover(rollover);
+                envelope.setAlertThresholdPct(alertThresholdPct);
+                envelope.setZoneId(zoneId);
+                envelope.setActive(true);
+                Instant now = Instant.now();
+                envelope.setCreatedAt(now);
+                envelope.setUpdatedAt(now);
+                return envelopeRepo.save(envelope);
+            } catch (DuplicateResourceException e) {
+                throw e;
+            } catch (DataAccessException e) {
+                log.error("Failed to create budget envelope name={} userId={}", name, userId, e);
+                throw new BudgetTrackerException("Failed to create budget envelope", e);
             }
-            BudgetEnvelope envelope = new BudgetEnvelope();
-            envelope.setUserId(userId);
-            envelope.setCategoryId(categoryId);
-            envelope.setName(name);
-            envelope.setPeriodType(periodType);
-            envelope.setPeriodStart(periodStart);
-            envelope.setPeriodEnd(periodEnd);
-            envelope.setLimitAmount(limitAmount);
-            envelope.setRollover(rollover);
-            envelope.setAlertThresholdPct(alertThresholdPct);
-            envelope.setZoneId(zoneId);
-            envelope.setActive(true);
-            Instant now = Instant.now();
-            envelope.setCreatedAt(now);
-            envelope.setUpdatedAt(now);
-            return envelopeRepo.save(envelope);
-        } catch (DuplicateResourceException e) {
-            throw e;
-        } catch (DataAccessException e) {
-            log.error("Failed to create budget envelope name={} userId={}", name, userId, e);
-            throw new BudgetTrackerException("Failed to create budget envelope", e);
-        }
+        });
     }
 
     private BigDecimal computeSpent(BudgetEnvelope envelope) {
@@ -184,37 +188,41 @@ public class BudgetService {
 
     /** Returns EnvelopeStatus for all active envelopes belonging to a user. Used by dashboard + budgets screen. */
     public List<EnvelopeStatus> getAllEnvelopeStatuses(long userId) {
-        try {
-            List<BudgetEnvelope> all = envelopeRepo.findByUserId(userId);
-            List<EnvelopeStatus> results = new ArrayList<>();
-            for (BudgetEnvelope envelope : all) {
-                if (envelope.isActive()) {
-                    results.add(evaluate(envelope));
+        return txRunner.inTransaction(() -> {
+            try {
+                List<BudgetEnvelope> all = envelopeRepo.findByUserId(userId);
+                List<EnvelopeStatus> results = new ArrayList<>();
+                for (BudgetEnvelope envelope : all) {
+                    if (envelope.isActive()) {
+                        results.add(evaluate(envelope));
+                    }
                 }
+                return results;
+            } catch (DataAccessException e) {
+                log.error("Failed to evaluate envelopes for userId={}", userId, e);
+                throw new BudgetTrackerException("Failed to evaluate envelopes", e);
             }
-            return results;
-        } catch (DataAccessException e) {
-            log.error("Failed to evaluate envelopes for userId={}", userId, e);
-            throw new BudgetTrackerException("Failed to evaluate envelopes", e);
-        }
+        });
     }
 
     /** H3: delete a budget envelope, verifying ownership first. */
     public void deleteEnvelope(long envelopeId, long userId) {
-        try {
-            BudgetEnvelope envelope = envelopeRepo.findById(envelopeId)
-                    .orElseThrow(() -> new com.budgettracker.domain.ResourceNotFoundException(
-                            "Budget envelope not found: " + envelopeId));
-            if (envelope.getUserId() != userId) {
-                throw new SecurityException("Access denied: budget envelope does not belong to current user");
+        txRunner.inTransaction(() -> {
+            try {
+                BudgetEnvelope envelope = envelopeRepo.findById(envelopeId)
+                        .orElseThrow(() -> new com.budgettracker.domain.ResourceNotFoundException(
+                                "Budget envelope not found: " + envelopeId));
+                if (envelope.getUserId() != userId) {
+                    throw new SecurityException("Access denied: budget envelope does not belong to current user");
+                }
+                envelopeRepo.deleteById(envelopeId);
+            } catch (com.budgettracker.domain.ResourceNotFoundException | SecurityException e) {
+                throw e;
+            } catch (DataAccessException e) {
+                log.error("Failed to delete budget envelope id={}", envelopeId, e);
+                throw new BudgetTrackerException("Failed to delete budget envelope", e);
             }
-            envelopeRepo.deleteById(envelopeId);
-        } catch (com.budgettracker.domain.ResourceNotFoundException | SecurityException e) {
-            throw e;
-        } catch (DataAccessException e) {
-            log.error("Failed to delete budget envelope id={}", envelopeId, e);
-            throw new BudgetTrackerException("Failed to delete budget envelope", e);
-        }
+        });
     }
 
     private LocalDate computePeriodEnd(PeriodType periodType, LocalDate periodStart) {

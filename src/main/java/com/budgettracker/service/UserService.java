@@ -35,42 +35,46 @@ public class UserService {
         if (plainPassword == null || plainPassword.isBlank()) {
             throw new InvalidTransactionException("Password must not be blank");
         }
-        try {
-            if (userRepo.findByEmail(email).isPresent()) {
-                throw new DuplicateResourceException("Email already registered: " + email);
+        return txRunner.inTransaction(() -> {
+            try {
+                if (userRepo.findByEmail(email).isPresent()) {
+                    throw new DuplicateResourceException("Email already registered: " + email);
+                }
+                User user = new User();
+                user.setEmail(email);
+                user.setDisplayName(displayName);
+                user.setPasswordHash(PasswordHasher.hash(plainPassword));
+                user.setBaseCurrency("PHP");
+                user.setDefaultZoneId("Asia/Manila");
+                Instant now = Instant.now();
+                user.setCreatedAt(now);
+                user.setUpdatedAt(now);
+                return userRepo.save(user);
+            } catch (DuplicateResourceException e) {
+                throw e;
+            } catch (DataAccessException e) {
+                log.error("Failed to register user email={}", email, e);
+                throw new BudgetTrackerException("Failed to register user", e);
             }
-            User user = new User();
-            user.setEmail(email);
-            user.setDisplayName(displayName);
-            user.setPasswordHash(PasswordHasher.hash(plainPassword));
-            user.setBaseCurrency("PHP");
-            user.setDefaultZoneId("Asia/Manila");
-            Instant now = Instant.now();
-            user.setCreatedAt(now);
-            user.setUpdatedAt(now);
-            return userRepo.save(user);
-        } catch (DuplicateResourceException e) {
-            throw e;
-        } catch (DataAccessException e) {
-            log.error("Failed to register user email={}", email, e);
-            throw new BudgetTrackerException("Failed to register user", e);
-        }
+        });
     }
 
     public User login(String email, String plainPassword) {
-        try {
-            User user = userRepo.findByEmail(email)
-                    .orElseThrow(() -> new ResourceNotFoundException("No account found for: " + email));
-            if (!PasswordHasher.verify(plainPassword, user.getPasswordHash())) {
-                throw new InvalidTransactionException("Invalid password");
+        return txRunner.inTransaction(() -> {
+            try {
+                User user = userRepo.findByEmail(email)
+                        .orElseThrow(() -> new ResourceNotFoundException("No account found for: " + email));
+                if (!PasswordHasher.verify(plainPassword, user.getPasswordHash())) {
+                    throw new InvalidTransactionException("Invalid password");
+                }
+                return user;
+            } catch (ResourceNotFoundException | InvalidTransactionException e) {
+                throw e;
+            } catch (DataAccessException e) {
+                log.error("Login failed for email={}", email, e);
+                throw new BudgetTrackerException("Login failed", e);
             }
-            return user;
-        } catch (ResourceNotFoundException | InvalidTransactionException e) {
-            throw e;
-        } catch (DataAccessException e) {
-            log.error("Login failed for email={}", email, e);
-            throw new BudgetTrackerException("Login failed", e);
-        }
+        });
     }
 
     public User findById(long id) {
