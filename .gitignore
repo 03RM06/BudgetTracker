@@ -7,6 +7,10 @@ target/
 *.iml
 nbproject/
 nb-configuration.xml
+nbactions.xml
 
 *.log
 *.tmp
+
+# Local credentials — copy config.properties.example and fill in real values
+src/main/resources/config.properties
